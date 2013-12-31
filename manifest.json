@@ -1,0 +1,17 @@
+{
+  "name": "Download Biomanufacturing.org Institutions",
+  "description": "This parses the page, and creates a JSON file which contains the broken up information.",
+  "version": "1.0",
+  "permissions": [
+    "activeTab"
+  ],
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": false
+  },
+  "browser_action": {
+    "default_title": "Download Institution",
+    "default_icon": "icon.png"
+  },
+  "manifest_version": 2
+}
