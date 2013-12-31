@@ -1,6 +1,10 @@
 var $ = function(str){
   return document.querySelector(str);
 }
+var AddressRegex = /^([0-9]+-?[a-z]?\s*[nsew]{0,2}\s*-?\s*([0-9]{1,3}(st|nd|rd|th))?\s+[a-z]+.+)|(Suite .*[0-9]+)$/i,//address: 123 place walk or Suite derp 105
+    CityStateZipRegex = /^([a-zA-Z \.]+),?\s+([A-Za-z][A-Za-z]),?\s*( [0-9\-]+)?$/,//city, state zip
+    PhoneRegex = /^(1-)?\(?([0-9]{3})[\- )] ?([0-9]{3})[ -]([0-9]{4})$/,//looks like a phone number
+    POBoxRegex = /^(P.?O.? Box [0-9]+),?(.*)$/i;
 
 var $data = $('td[width="50%"] table td');
 var state = $('.bodytextB', data).innerHTML.replace(/Biotechnology In /i, '');
@@ -20,6 +24,7 @@ for (var i in split) {
     institutions[category].push(inst);
   }
 }
+
 function parseInstitution(str){
   var label = str.match(/\s*<font [^>]+>\s*(EDUCATION|ORGANIZATIONS|INDUSTRY)\s*<\/font>/);
   if (label)
@@ -28,50 +33,41 @@ function parseInstitution(str){
   //parse an institution
   var inst = {};
   inst.original = str;
-  inst.error = [];  
-  var rows = str.split(/<br>/g);
+  inst.error = [];
+  str = str
+    .replace(/(\n|\r|\r\n)/g, '<br>')//change newlines into html breaks...
+    .replace(/^(<br>)+/, '');//extra lines at the start screw up my script.
+  var rows = str.split(/<br>/g);//split based on breaks between lines
   var text = rows.shift();
   if (url = text.match(/href="([^"]+)"/))
     inst.url = url[1];
   inst.title = text.match(/(<[^>]+>)?([^<]+)(<\/[^>]>)?/)[2];
   
-  if (inst.url == "#top") {
+  if (inst.url == "#top" || inst.title.substr(0, 5) == "Note:") {
     return null;//don't add this.
   }
   
   while(text = rows.shift()){
-    if(/^([0-9]+[a-z]?( ([0-9]{1,2}(st|nd|rd|th)))?\s+[a-z]+.+)|(Suite .*[0-9]+)$/i.test(text)) {//address: 123 place walk or Suite derp 105
-      inst.address = text;
-    }else if (/^([a-zA-Z \.]+,?\s+[A-Z][A-Z],?\s*( [0-9\-]+)?)$/.test(text)) {//city, state zip
-      var split = text.split(/^([a-zA-Z \.]+),?\s+([A-Z][A-Z]),?\s*( [0-9\-]+)?$/);
-      if (split.length==5) {
-        inst.city = split[1]
-        inst.state = split[2];
-        if (split[3])
-          inst.zip = split[3];
-      }else{
-        inst.error.push(text);
-      }
-    }else if (/^(1-)?\(?[0-9]{3}[\- )] ?[0-9]{3}[ -][0-9]{4}$/.test(text)) {//looks like a phone number
-      var split = text.split(/^(1-)?\(?([0-9]{3})[\- )] ?([0-9]{3})[ -]([0-9]{4})$/);
-      if (split.length==6) {
-        inst.phone = "("+split[2]+") "+split[3]+"-"+split[4];
-      }
-    }else if (/^P.?O.? Box [0-9]+.*$/i.test(text)) {
-      var split = text.split(/^(P.?O.? Box [0-9]+),?(.*)$/i);
-      if (split.length == 4) {
-        inst.additional = split[1];
-        if (split[2])//address is inline
-          inst.address = split[2];
-      }else{
-        inst.error.push(text);
-      }
+    if(AddressRegex.test(text)) {
+      inst.address = text.trim();
+    }else if (match = text.match(CityStateZipRegex)) {
+      inst.city = match[1]
+      inst.state = match[2];
+      if (match[3])
+        inst.zip = match[3].trimLeft();
+    }else if (match = text.match(PhoneRegex)){
+      inst.phone = "("+match[2]+") "+match[3]+"-"+match[4];
+    }else if (match = text.match(POBoxRegex)) {
+      inst.additional = match[1];
+      if (match[2])//address is inline
+        inst.address = match[2];
     }else{
       inst.error.push(text);
     }
-    if (inst.error.length > 0) {
-      console.log("error:", inst);
-    }
+
+  }
+  if (inst.error.length > 0) {
+    console.log("error:", inst.error, inst);
   }
   if (inst.additional && !inst.address) {
     inst.address = inst.additional;
