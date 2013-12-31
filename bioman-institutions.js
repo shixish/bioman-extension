@@ -1,9 +1,9 @@
 var $ = function(str){
   return document.querySelector(str);
 }
-var AddressRegex = /^([0-9]+-?[a-z]?\s*[nsew]{0,2}\s*-?\s*([0-9]{1,3}(st|nd|rd|th))?\s+[a-z]+.+)|(Suite .*[0-9]+)$/i,//address: 123 place walk or Suite derp 105
+var AddressRegex = /^(([nsew] ?[0-9]+\s*)+\s+[a-z]+.+)|([0-9]+-?[a-z]?\s*[nsew]{0,2}\s*-?\s*([0-9]{1,3}(st|nd|rd|th))?\s+[a-z]+.+)|(Suite .*[0-9]+)$/i,//address: 123 place walk or Suite derp 105
     CityStateZipRegex = /^([a-zA-Z \.]+),?\s+([A-Za-z][A-Za-z]),?\s*( [0-9\-]+)?$/,//city, state zip
-    PhoneRegex = /^(1-)?\(?([0-9]{3})[\- )] ?([0-9]{3})[ -]([0-9]{4})$/,//looks like a phone number
+    PhoneRegex = /^(1-)?\(?([0-9]{3})\s*[\- \.)]\s*([0-9]{3})\s*[\- \.]\s*([0-9]{4})\s*.*$/,//looks like a phone number
     POBoxRegex = /^(P.?O.? Box [0-9]+),?(.*)$/i;
 
 var $data = $('td[width="50%"] table td');
